@@ -1,7 +1,3 @@
--- Bit masks for index options
-\set DESC 1
-\set NULLS_FIRST 2
-
 WITH ind_col_data AS (
   -- Gather components of index columns
   SELECT
@@ -24,14 +20,14 @@ WITH ind_col_data AS (
         collname
     END AS collname,
     CASE (
-      pg_index.indoption[attnum - 1] & :DESC,
-      pg_index.indoption[attnum - 1] & :NULLS_FIRST
+      pg_index.indoption[attnum - 1] & 1 /* DESC */,
+      pg_index.indoption[attnum - 1] & 2 /* NULLS FIRST */
     )
-      WHEN (:DESC, :NULLS_FIRST)
+      WHEN (1 /* DESC */, 2 /* NULLS FIRST */)
         THEN 'DESC'
-      WHEN (:DESC, 0)
+      WHEN (1 /* DESC */, 0 /* NULLS LAST */)
         THEN 'DESC NULLS LAST'
-      WHEN (0, :NULLS_FIRST)
+      WHEN (0 /* ASC */, 2 /* NULLS FIRST */)
         THEN 'NULLS FIRST'
       ELSE
         -- ASC NULLS LAST is default
@@ -44,7 +40,7 @@ WITH ind_col_data AS (
       ON indexrelid = attrelid
   JOIN
     pg_opclass
-      ON pg_opclass.oid = pg_index.indclass[attnum -1]
+      ON pg_opclass.oid = pg_index.indclass[attnum - 1]
   LEFT JOIN
     pg_collation
       ON pg_collation.oid = pg_index.indcollation[attnum - 1]
