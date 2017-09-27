@@ -52,7 +52,6 @@ ind_col_agg AS (
   SELECT
     attrelid,
     array_agg(
-      -- Escape double-pipe as a pipe is a table delimiter in asciidoc
         attname ||
       coalesce(
         ' ' || opcname,
